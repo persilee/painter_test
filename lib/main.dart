@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -29,13 +30,23 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController controller = AnimationController(
+      duration: const Duration(milliseconds: 600), vsync: this)
+    ..forward();
   int _counter = 0;
 
   void _incrementCounter() {
     setState(() {
       _counter++;
     });
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             CustomPaint(
-              painter: MyPainter(percentage: 93.0),
+              painter: MyPainter(percentage: 53.0, controller: controller),
               size: const Size(300.0, 300.0),
             ),
           ],
@@ -66,8 +77,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class MyPainter extends CustomPainter {
   final double percentage;
+  final AnimationController controller;
 
-  MyPainter({required this.percentage}) : super();
+  MyPainter({required this.percentage, required this.controller})
+      : super(repaint: controller);
 
   late double effectiveRadius;
 
@@ -110,8 +123,14 @@ class MyPainter extends CustomPainter {
     Path path2 = Path()
       ..addArc(Rect.fromCircle(center: center, radius: effectiveRadius / 2), a,
           arcAngleOther);
-    canvas.drawPath(path, paint);
-    canvas.drawPath(path2, paint2);
+    print('aaaaa: ${path.computeMetrics().single}');
+    print('aaaaa: ${controller.value}');
+    PathMetric metric = path.computeMetrics().single;
+    PathMetric metric2 = path2.computeMetrics().single;
+    canvas.drawPath(
+        metric.extractPath(0, metric.length * controller.value), paint);
+    canvas.drawPath(
+        metric2.extractPath(0, metric2.length * controller.value), paint2);
   }
 
   @override
